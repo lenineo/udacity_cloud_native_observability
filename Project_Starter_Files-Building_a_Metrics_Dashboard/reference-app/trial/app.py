@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, jsonify
-
+from flask import Flask, render_template, jsonify, json, request
+import logging
+from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
+from prometheus_flask_exporter import PrometheusMetrics
 from jaeger_client import Config
 from jaeger_client.metrics.prometheus import PrometheusMetricsFactory
 from opentelemetry import trace
@@ -19,10 +21,14 @@ trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 
+logging.basicConfig(level=logging.INFO)
+logging.info("Setting LOGLEVEL to INFO")
 app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
 
+metrics = PrometheusMetrics(app)
+metrics.info("app_info", "App Info", version="1.0.0")
 
 #config = Config(
 #        config={},
@@ -52,6 +58,15 @@ def init_tracer(service):
 
 tracer = init_tracer('first-service')
 
+@app.route('/healthz')
+def health_check():
+    response = app.response_class(
+            response=json.dumps({"result":"OK - healthy"}),
+            status=200,
+            mimetype='application/json'
+        )
+    return response
+
 @app.route('/')
 def homepage():
     return render_template("main.html")
@@ -68,6 +83,7 @@ def homepage():
 
 
     return jsonify(homepages)
+
 
 if __name__ == "__main__":
     app.run(debug=True,)

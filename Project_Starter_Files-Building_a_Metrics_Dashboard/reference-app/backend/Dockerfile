@@ -7,9 +7,13 @@ ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./
 
+
 ARG PROJECT_ID
 ENV PROJECT_ID ${PROJECT_ID}
 
+
+ENV PROMETHEUS_MULTIPROC_DIR /tmp
+ENV prometheus_multiproc_dir /tmp
 
 # Install production dependencies.
 RUN apt-get update && \

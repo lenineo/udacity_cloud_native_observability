@@ -1,7 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    sidecar.jaegertracing.io/inject: 'true'
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /metrics
+    prometheus.io/port: frontport
   name: frontend-app
+  labels:
+    name: frontend
+
 spec:
   replicas: 3
   selector:
@@ -13,10 +21,12 @@ spec:
         app: frontend
     spec:
       containers:
-      - name: frontend
-        image: ghcr.io/thejaysmith/myfrontend:v1
-        ports:
-        - containerPort: 8080
+        - name: frontend
+          image: ulyanov/frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: frontport
 ---
 apiVersion: v1
 kind: Service
@@ -27,5 +37,6 @@ spec:
     app: frontend
   ports:
     - port: 8080
-      targetPort: 8080
+      name: frontend
+      targetPort: frontport
   type: LoadBalancer

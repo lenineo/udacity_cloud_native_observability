@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: trial
-        image: ghcr.io/thejaysmith/trial:v1
+        image: ulyanov/trial:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
 ---
@@ -27,5 +28,6 @@ spec:
     app: trial
   ports:
     - port: 8080
+      name: trial
       targetPort: 8080
   type: LoadBalancer
